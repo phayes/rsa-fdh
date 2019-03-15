@@ -23,7 +23,7 @@ pub enum Error {
 }
 
 pub fn sign<R: Rng>(
-    rng: Option<&mut R>,
+    rng: &mut R,
     priv_key: &RSAPrivateKey,
     hashed: &[u8],
 ) -> Result<Vec<u8>, Error> {
@@ -38,7 +38,7 @@ pub fn sign<R: Rng>(
         return Err(Error::DigestTooLarge);
     }
 
-    let c = internals::decrypt_and_check(rng, priv_key, &m)
+    let c = internals::decrypt_and_check(Some(rng), priv_key, &m)
         .map_err(|err| Error::RSAError(err))?
         .to_bytes_be();
 
@@ -71,7 +71,7 @@ pub fn verify<K: PublicKey>(pub_key: &K, hashed: &[u8], sig: &[u8]) -> Result<()
 }
 
 /// Blind the given digest, returning the blinded digest and the unblinding factor.
-pub fn blind<R: Rng, P: PublicKey>(pub_key: P, rng: &mut R, digest: &[u8]) -> (Vec<u8>, Vec<u8>) {
+pub fn blind<R: Rng, P: PublicKey>(rng: &mut R, pub_key: P, digest: &[u8]) -> (Vec<u8>, Vec<u8>) {
     let c = BigUint::from_bytes_be(digest);
     let (c, unblinder) = internals::blind::<R, P>(rng, &pub_key, &c);
     (c.to_bytes_be(), unblinder.to_bytes_be())
@@ -87,13 +87,19 @@ pub fn unblind(pub_key: impl PublicKey, blinded_sig: &[u8], unblinder: &[u8]) ->
 
 /// Convenience function for hashing
 pub fn hash_message<H: digest::Digest + Clone, R: Rng, P: PublicKey>(
-    message: &[u8],
-    signer_public_key: &P,
     rng: &mut R,
+    signer_public_key: &P,
+    message: &[u8],
 ) -> Result<(Vec<u8>, u32), Error> {
     let size = signer_public_key.size();
     let mut hasher = FullDomainHash::<H>::new(size).unwrap(); // will never panic.
     hasher.input(message);
+
+    // Append the hash of the message as anti-homomorphic error correction.
+    let mut append_hasher = H::new();
+    append_hasher.input(message);
+    hasher.input(append_hasher.result());
+
     let iv: u32 = rng.gen();
     let (digest, iv) = hasher
         .results_under(iv, signer_public_key.n())
@@ -104,13 +110,19 @@ pub fn hash_message<H: digest::Digest + Clone, R: Rng, P: PublicKey>(
 
 /// Convenience function for hashing a message with an initilization vector
 pub fn hash_message_with_iv<H: digest::Digest + Clone, P: PublicKey>(
-    message: &[u8],
-    signer_public_key: &P,
     iv: u32,
+    signer_public_key: &P,
+    message: &[u8],
 ) -> Vec<u8> {
     let size = signer_public_key.size();
     let mut hasher = FullDomainHash::<H>::with_iv(size, iv);
     hasher.input(message);
+
+    // Append the hash of the message as anti-homomorphic error correction.
+    let mut append_hasher = H::new();
+    append_hasher.input(message);
+    hasher.input(append_hasher.result());
+
     hasher.vec_result()
 }
 
@@ -137,13 +149,13 @@ mod tests {
         // ----------------------
 
         // Hash the contents of the message, getting the digest
-        let (digest, iv) = hash_message::<Sha512, _, _>(message, &signer_pub_key, &mut rng)?;
+        let (digest, iv) = hash_message::<Sha512, _, _>(&mut rng, &signer_pub_key, message)?;
 
         // Get the blinded digest and the unblinder
-        let (blinded_digest, unblinder) = blind(&signer_pub_key, &mut rng, &digest);
+        let (blinded_digest, unblinder) = blind(&mut rng, &signer_pub_key, &digest);
 
         // Send the blinded-digest to the signer and get their signature
-        let blind_signature = sign(Some(&mut rng), &signer_priv_key, &blinded_digest)?;
+        let blind_signature = sign(&mut rng, &signer_priv_key, &blinded_digest)?;
 
         // Unblind the signature
         let signature = unblind(&signer_pub_key, &blind_signature, &unblinder);
@@ -152,7 +164,7 @@ mod tests {
         // --------------------
 
         // Rehash the message using the iv
-        let check_digest = hash_message_with_iv::<Sha512, _>(message, &signer_pub_key, iv);
+        let check_digest = hash_message_with_iv::<Sha512, _>(iv, &signer_pub_key, message);
 
         // Check that the signature matches
         verify(&signer_pub_key, &check_digest, &signature)?;
@@ -162,6 +174,7 @@ mod tests {
 
     #[test]
     fn manual_hash_test() -> Result<(), Error> {
+        // Don't do this in real life, homomorphic versions of the message will be valid.
         let mut rng = rand::thread_rng();
         let priv_key = RSAPrivateKey::new(&mut rng, 256).unwrap();
 
@@ -170,9 +183,9 @@ mod tests {
         let iv: u32 = rng.gen();
         let (digest, iv) = hasher.results_under(iv, priv_key.n()).unwrap();
 
-        let (blinded_digest, unblinder) = blind(&priv_key, &mut rng, &digest);
+        let (blinded_digest, unblinder) = blind(&mut rng, &priv_key, &digest);
 
-        let blind_signature = sign(Some(&mut rng), &priv_key, &blinded_digest)?;
+        let blind_signature = sign(&mut rng, &priv_key, &blinded_digest)?;
 
         verify(&priv_key, &blinded_digest, &blind_signature)?;
 
