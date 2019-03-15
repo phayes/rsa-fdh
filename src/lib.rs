@@ -123,11 +123,9 @@ mod tests {
 
     #[test]
     fn example_test() -> Result<(), Error> {
-        let mut rng = rand::thread_rng();
-
         // Stage 1: Setup
-        // ------------------
-
+        // --------------
+        let mut rng = rand::thread_rng();
         let message = b"NEVER GOING TO GIVE YOU UP";
 
         // Create the keys
@@ -136,7 +134,7 @@ mod tests {
             RSAPublicKey::new(signer_priv_key.n().clone(), signer_priv_key.e().clone()).unwrap();
 
         // Stage 2: Blind Signing
-        // --------------------
+        // ----------------------
 
         // Hash the contents of the message, getting the digest
         let (digest, iv) = hash_message::<Sha512, _, _>(message, &signer_pub_key, &mut rng)?;

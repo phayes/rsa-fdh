@@ -2,7 +2,7 @@
 RSA-FDH
 =======
 
-Implements an RSA-FDH signature scheme.
+Implements an RSA-FDH signature scheme that supports blind signing.
 
 Example
 -------
