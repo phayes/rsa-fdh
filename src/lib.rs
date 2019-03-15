@@ -157,7 +157,7 @@ mod tests {
         let check_digest = hash_message_with_iv::<Sha512, _>(message, &signer_pub_key, iv);
 
         // Check that the signature matches
-        verify(&signer_pub_key, &check_digest, &signature).unwrap();
+        verify(&signer_pub_key, &check_digest, &signature)?;
 
         Ok(())
     }
