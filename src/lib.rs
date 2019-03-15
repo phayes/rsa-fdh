@@ -157,6 +157,9 @@ mod tests {
         // Send the blinded-digest to the signer and get their signature
         let blind_signature = sign(&mut rng, &signer_priv_key, &blinded_digest)?;
 
+        // Assert the the blind signature does not validate
+        assert!(verify(&signer_pub_key, &digest, &blind_signature).is_err());
+
         // Unblind the signature
         let signature = unblind(&signer_pub_key, &blind_signature, &unblinder);
 
