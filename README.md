@@ -39,8 +39,8 @@ let blind_signature = rsa_fdh::sign(Some(&mut rng), &signer_priv_key, &blinded_d
 let signature = rsa_fdh::unblind(&signer_pub_key, &blind_signature, &unblinder);
 
 
-// Stage 3: Verifiction
-// --------------------
+// Stage 3: Verification
+// ---------------------
 
 // Rehash the message using the iv
 let check_digest = rsa_fdh::hash_message_with_iv::<Sha512, _>(message, &signer_pub_key, iv);
