@@ -1,4 +1,5 @@
 use failure::Fail;
+use fdh::{FullDomainHash, Input, VariableOutput};
 use num_bigint_dig::BigUint;
 use rand::Rng;
 use rsa::errors::Error as RSAError;
@@ -9,12 +10,14 @@ use subtle::ConstantTimeEq;
 /// Error types
 #[derive(Debug, Fail)]
 pub enum Error {
-    #[fail(display = "rsa-fdh: digest numeric value is too large")]
+    #[fail(display = "rsa-fdh: digest big-endian numeric value is too large")]
     DigestTooLarge,
     #[fail(display = "rsa-fdh: digest is incorrectly sized")]
     DigestIncorrectSize,
     #[fail(display = "rsa-fdh: verification failed")]
     Verification,
+    #[fail(display = "rsa-fdh: public key modulus is too large")]
+    ModulusTooLarge,
     #[fail(display = "rsa-fdh: rsa error: {}", 0)]
     RSAError(RSAError),
 }
@@ -24,8 +27,6 @@ pub fn sign<R: Rng>(
     priv_key: &RSAPrivateKey,
     hashed: &[u8],
 ) -> Result<Vec<u8>, Error> {
-    // TODO: Check message size and refuse to sign if too small.
-
     if priv_key.size() < hashed.len() {
         return Err(Error::DigestIncorrectSize);
     }
@@ -70,31 +71,102 @@ pub fn verify<K: PublicKey>(pub_key: &K, hashed: &[u8], sig: &[u8]) -> Result<()
 }
 
 /// Blind the given digest, returning the blinded digest and the unblinding factor.
-pub fn blind<R: Rng>(priv_key: &RSAPrivateKey, rng: &mut R, digest: &[u8]) -> (Vec<u8>, Vec<u8>) {
+pub fn blind<R: Rng, P: PublicKey>(pub_key: P, rng: &mut R, digest: &[u8]) -> (Vec<u8>, Vec<u8>) {
     let c = BigUint::from_bytes_be(digest);
-    let (c, unblinder) = internals::blind::<R>(rng, priv_key, &c);
+    let (c, unblinder) = internals::blind::<R, P>(rng, &pub_key, &c);
     (c.to_bytes_be(), unblinder.to_bytes_be())
 }
 
 /// Unblind the given signature, producing a signature that also signs the unblided digest.
-pub fn unblind(priv_key: &RSAPrivateKey, blinded_sig: &[u8], unblinder: &[u8]) -> Vec<u8> {
+pub fn unblind(pub_key: impl PublicKey, blinded_sig: &[u8], unblinder: &[u8]) -> Vec<u8> {
     let blinded_sig = BigUint::from_bytes_be(blinded_sig);
     let unblinder = BigUint::from_bytes_be(unblinder);
-    let unblinded = internals::unblind(priv_key, &blinded_sig, &unblinder);
+    let unblinded = internals::unblind(pub_key, &blinded_sig, &unblinder);
     unblinded.to_bytes_be()
+}
+
+/// Convenience function for hashing
+pub fn hash_message<H: digest::Digest + Clone, R: Rng, P: PublicKey>(
+    message: &[u8],
+    signer_public_key: &P,
+    rng: &mut R,
+) -> Result<(Vec<u8>, u32), Error> {
+    let size = signer_public_key.size();
+    let mut hasher = FullDomainHash::<H>::new(size).unwrap(); // will never panic.
+    hasher.input(message);
+    let iv: u32 = rng.gen();
+    let (digest, iv) = hasher
+        .results_under(iv, signer_public_key.n())
+        .map_err(|_| Error::ModulusTooLarge)?;
+
+    Ok((digest, iv))
+}
+
+/// Convenience function for hashing a message with an initilization vector
+pub fn hash_message_with_iv<H: digest::Digest + Clone, P: PublicKey>(
+    message: &[u8],
+    signer_public_key: &P,
+    iv: u32,
+) -> Vec<u8> {
+    let size = signer_public_key.size();
+    let mut hasher = FullDomainHash::<H>::with_iv(size, iv);
+    hasher.input(message);
+    hasher.vec_result()
 }
 
 #[cfg(test)]
 mod tests {
     use crate::*;
     use fdh::{FullDomainHash, Input, VariableOutput};
-    use rsa::{PublicKey, RSAPrivateKey};
+    use rsa::{PublicKey, RSAPrivateKey, RSAPublicKey};
     use sha2::Sha512;
 
     #[test]
-    fn basic_test() -> Result<(), Error> {
+    fn example_test() -> Result<(), Error> {
+        let mut rng = rand::thread_rng();
+
+        // Stage 1: Setup
+        // ------------------
+
+        let message = b"NEVER GOING TO GIVE YOU UP";
+
+        // Create the keys
+        let signer_priv_key = RSAPrivateKey::new(&mut rng, 256).unwrap();
+        let signer_pub_key =
+            RSAPublicKey::new(signer_priv_key.n().clone(), signer_priv_key.e().clone()).unwrap();
+
+        // Stage 2: Blind Signing
+        // --------------------
+
+        // Hash the contents of the message, getting the digest
+        let (digest, iv) = hash_message::<Sha512, _, _>(message, &signer_pub_key, &mut rng)?;
+
+        // Get the blinded digest and the unblinder
+        let (blinded_digest, unblinder) = blind(&signer_pub_key, &mut rng, &digest);
+
+        // Send the blinded-digest to the signer and get their signature
+        let blind_signature = sign(Some(&mut rng), &signer_priv_key, &blinded_digest)?;
+
+        // Unblind the signature
+        let signature = unblind(&signer_pub_key, &blind_signature, &unblinder);
+
+        // Stage 3: Verifiction
+        // --------------------
+
+        // Rehash the message using the iv
+        let check_digest = hash_message_with_iv::<Sha512, _>(message, &signer_pub_key, iv);
+
+        // Check that the signature matches
+        verify(&signer_pub_key, &check_digest, &signature).unwrap();
+
+        Ok(())
+    }
+
+    #[test]
+    fn manual_hash_test() -> Result<(), Error> {
         let mut rng = rand::thread_rng();
         let priv_key = RSAPrivateKey::new(&mut rng, 256).unwrap();
+
         let mut hasher = FullDomainHash::<Sha512>::new(256 / 8).unwrap();
         hasher.input(b"ATTACKATDAWN");
         let iv: u32 = rng.gen();
@@ -111,9 +183,10 @@ mod tests {
         verify(&priv_key, &digest, &unblinded_signature)?;
 
         // Reshash the message to verify it
-        let mut hasher = FullDomainHash::<Sha512>::with_iv(256 / 8, iv).unwrap();
+        let mut hasher = FullDomainHash::<Sha512>::with_iv(256 / 8, iv);
         hasher.input(b"ATTACKATDAWN");
 
         Ok(())
     }
+
 }
