@@ -34,7 +34,7 @@ let signer_pub_key = RSAPublicKey::new(
 // ----------------------
 
 // Hash the contents of the message, getting the digest
-let (digest, iv) = hash_message::<Sha512, _, _>(&mut rng, &signer_pub_key, message)?;
+let (digest, iv) = hash_message::<Sha256, _, _>(&mut rng, &signer_pub_key, message)?;
 
 // Get the blinded digest and the unblinder
 let (blinded_digest, unblinder) = blind(&mut rng, &signer_pub_key, &digest);
@@ -49,7 +49,7 @@ let signature = unblind(&signer_pub_key, &blind_signature, &unblinder);
 // --------------------
 
 // Rehash the message using the iv
-let check_digest = hash_message_with_iv::<Sha512, _>(iv, &signer_pub_key, message);
+let check_digest = hash_message_with_iv::<Sha256, _>(iv, &signer_pub_key, message);
 
 // Check that the signature matches
 verify(&signer_pub_key, &check_digest, &signature)?;
