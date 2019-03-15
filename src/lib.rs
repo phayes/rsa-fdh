@@ -157,7 +157,10 @@ mod tests {
         // Send the blinded-digest to the signer and get their signature
         let blind_signature = sign(&mut rng, &signer_priv_key, &blinded_digest)?;
 
-        // Assert the the blind signature does not validate
+        // Check that the blind signature signs the blind digest.
+        verify(&signer_pub_key, &blinded_digest, &blind_signature)?;
+
+        // Assert the the blind signature does not validate against the orignal digest.
         assert!(verify(&signer_pub_key, &digest, &blind_signature).is_err());
 
         // Unblind the signature
@@ -169,7 +172,7 @@ mod tests {
         // Rehash the message using the iv
         let check_digest = hash_message_with_iv::<Sha512, _>(iv, &signer_pub_key, message);
 
-        // Check that the signature matches
+        // Check that the signature matches on the unblinded signature and the rehashed digest.
         verify(&signer_pub_key, &check_digest, &signature)?;
 
         Ok(())
@@ -190,8 +193,7 @@ mod tests {
 
         let blind_signature = sign(&mut rng, &priv_key, &blinded_digest)?;
 
-        // Oh fancy, the blind signature signs the orignal digest because of homomorphism.
-        // This is genearlly not desired.
+        // Check that the blind signature signs the blind digest.
         verify(&priv_key, &blinded_digest, &blind_signature)?;
 
         let unblinded_signature = unblind(&priv_key, &blind_signature, &unblinder);
