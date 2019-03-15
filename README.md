@@ -19,8 +19,11 @@ let mut rng = rand::thread_rng();
 let message = b"NEVER GOING TO GIVE YOU UP";
 
 // Create the keys
-let signer_priv_key = RSAPrivateKey::new(&mut rng, 256).unwrap();
-let signer_pub_key = RSAPublicKey::new(signer_priv_key.n().clone(), signer_priv_key.e().clone()).unwrap();
+let signer_priv_key = RSAPrivateKey::new(&mut rng, 2048).unwrap();
+let signer_pub_key = RSAPublicKey::new(
+  signer_priv_key.n().clone(), 
+  signer_priv_key.e().clone()
+).unwrap();
 
 
 // Stage 2: Blind Signing
@@ -43,7 +46,7 @@ let signature = rsa_fdh::unblind(&signer_pub_key, &blind_signature, &unblinder);
 // ---------------------
 
 // Rehash the message using the iv
-let check_digest = rsa_fdh::hash_message_with_iv::<Sha512, _>(message, &signer_pub_key, iv);
+let check_digest = rsa_fdh::hash_message_with_iv::<Sha256, _>(message, &signer_pub_key, iv);
 
 // Check that the signature matches
 rsa_fdh::verify(&signer_pub_key, &check_digest, &signature)?;
