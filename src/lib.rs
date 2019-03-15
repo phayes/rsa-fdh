@@ -176,11 +176,11 @@ mod tests {
     }
 
     #[test]
-    fn manual_hash_test() -> Result<(), Error> {
-        // Don't do this in real life, homomorphic versions of the message will be valid.
+    fn homomorphic_hash_test() -> Result<(), Error> {
         let mut rng = rand::thread_rng();
         let priv_key = RSAPrivateKey::new(&mut rng, 256).unwrap();
 
+        // Don't do this in real life, homomorphic transformations of the message will be valid.
         let mut hasher = FullDomainHash::<Sha512>::new(256 / 8).unwrap();
         hasher.input(b"ATTACKATDAWN");
         let iv: u32 = rng.gen();
@@ -190,6 +190,8 @@ mod tests {
 
         let blind_signature = sign(&mut rng, &priv_key, &blinded_digest)?;
 
+        // Oh fancy, the blind signature signs the orignal digest because of homomorphism.
+        // This is genearlly not desired.
         verify(&priv_key, &blinded_digest, &blind_signature)?;
 
         let unblinded_signature = unblind(&priv_key, &blind_signature, &unblinder);
@@ -199,6 +201,7 @@ mod tests {
         // Reshash the message to verify it
         let mut hasher = FullDomainHash::<Sha512>::with_iv(256 / 8, iv);
         hasher.input(b"ATTACKATDAWN");
+        verify(&priv_key, &hasher.vec_result(), &unblinded_signature)?;
 
         Ok(())
     }
