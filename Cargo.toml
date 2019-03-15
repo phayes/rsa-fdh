@@ -5,8 +5,8 @@ authors = ["phayes <patrick.d.hayes@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-rsa = { path = "/opt/RSA", features=["expose-internals"] }
-fdh = { path = "/opt/fdh-rs"}
+rsa = { git = "https://github.com/phayes/RSA", branch = "blind_functions", features=["expose-internals"] }
+fdh = "0.2"
 num-bigint-dig = "0.3.0"
 rand = "0.6.5"
 subtle = "2.0.0"
