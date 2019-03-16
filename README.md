@@ -75,14 +75,18 @@ Where:
 
 The message is hashed (along with `𝑁` and `𝐼𝑉 + incrementing suffix`) in rounds until the length of the hash is greater than or equal to the length of `𝑁`. The hash is truncated as needed to produce the digest `𝐷` with the same length as `𝑁`.
 
-Because `𝐷` must be also smaller than `𝑁`, we interate on different `𝐼𝑉`s until we find a `𝐷` that is smaller than `𝑁`. Pseudocode:
+Because `𝐷` must be also smaller than `𝑁`, we interate on different `𝐼𝑉`s until we find a `𝐷` that is smaller than `𝑁`. 
 
+### Pseudocode:
 ```
+message = "hunter2"
+modulus_n = public_key.n()
+fdh = create_fdh(sha256, modulus_n.bitlen())
 iv = random_iv()
-digest = fdh(m, iv)
+digest = fdh(message, iv)
 while digest.as_int() > modulus_n:
   iv++
-  digest = fdh(m, iv)
+  digest = fdh(message, iv)
 return (digest, iv)
 ```
 
