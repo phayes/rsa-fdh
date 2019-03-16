@@ -90,11 +90,11 @@ pub fn hash_message<H: digest::Digest + Clone, R: Rng, P: PublicKey>(
     rng: &mut R,
     signer_public_key: &P,
     message: &[u8],
-) -> Result<(Vec<u8>, u32), Error> {
+) -> Result<(Vec<u8>, u8), Error> {
     let size = signer_public_key.size();
     let mut hasher = FullDomainHash::<H>::new(size).unwrap(); // will never panic.
     hasher.input(message);
-    let iv: u32 = rng.gen();
+    let iv: u8 = rng.gen();
     let (digest, iv) = hasher
         .results_under(iv, signer_public_key.n())
         .map_err(|_| Error::ModulusTooLarge)?;
@@ -104,7 +104,7 @@ pub fn hash_message<H: digest::Digest + Clone, R: Rng, P: PublicKey>(
 
 /// Convenience function for hashing a message with an initilization vector
 pub fn hash_message_with_iv<H: digest::Digest + Clone, P: PublicKey>(
-    iv: u32,
+    iv: u8,
     signer_public_key: &P,
     message: &[u8],
 ) -> Vec<u8> {
@@ -174,7 +174,7 @@ mod tests {
         // Don't do this in real life, homomorphic transformations of the message will be valid.
         let mut hasher = FullDomainHash::<Sha512>::new(256 / 8).unwrap();
         hasher.input(b"ATTACKATDAWN");
-        let iv: u32 = rng.gen();
+        let iv: u8 = rng.gen();
         let (digest, iv) = hasher.results_under(iv, priv_key.n()).unwrap();
 
         let (blinded_digest, unblinder) = blind(&mut rng, &priv_key, &digest);

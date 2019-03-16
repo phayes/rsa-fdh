@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 rsa = { git = "https://github.com/phayes/RSA", branch = "blind_functions", features=["expose-internals"] }
-fdh = "0.2"
+fdh = "0.3"
 num-bigint-dig = "0.3.0"
 rand = "0.6.5"
 subtle = "2.0.0"
