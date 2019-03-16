@@ -65,10 +65,10 @@ Protocol Description
 
 A full domain hash (FDH) is constructed as follows:
 
-`FDH(𝑀, 𝐼𝑉) = H(𝑀 ‖ 𝑁 ‖ 𝐼𝑉 + 0) ‖ H(𝑀 ‖ 𝑁 ‖ 𝐼𝑉 + 1) ‖ H(𝑀 ‖ 𝑁 ‖ 𝐼𝑉 + 2) ... = 𝐃`
+`FDH(𝑀, 𝐼𝑉) = H(𝑀 ‖ 𝑁 ‖ 𝐼𝑉 + 0) ‖ H(𝑀 ‖ 𝑁 ‖ 𝐼𝑉 + 1) ‖ H(𝑀 ‖ 𝑁 ‖ 𝐼𝑉 + 2) ... = 𝐷`
 
 Where:
- - `𝐃` is the resulting digest
+ - `𝐷` is the resulting digest
  - `𝑀` is the message
  - `H` is any hash function
  - `𝑁` is the signing key's public modulus
@@ -76,7 +76,7 @@ Where:
 
 The message is hashed (along with `𝑁` and `𝐼𝑉 + incrementing suffix`) in rounds until the length of the hash is equal to the length of `𝑁`. The hash is truncated as needed.
 
-Because `𝐃` must be also smaller than `𝑁`, we interate on different `𝐼𝑉`s until we find a `𝐃` that is smaller than `𝑁`. Pseudocode:
+Because `𝐷` must be also smaller than `𝑁`, we interate on different `𝐼𝑉`s until we find a `𝐷` that is smaller than `𝑁`. Pseudocode:
 
 ```
 iv = random_iv()
@@ -87,4 +87,4 @@ while digest.as_int() > modulus_n:
 return (digest, iv)
 ```
 
-Blinding, unblinding, signing and verification are then all done in the usual way for RSA, using the digest `D` as the message with no additional padding.
+Blinding, unblinding, signing and verification are then all done in the usual way for RSA, using the digest `𝐷` as the message with no additional padding.
