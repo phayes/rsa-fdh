@@ -59,12 +59,17 @@ pub fn verify<K: PublicKey>(pub_key: &K, hashed: &[u8], sig: &[u8]) -> Result<()
     }
 
     let c = BigUint::from_bytes_be(sig);
-    let m = internals::encrypt(pub_key, &c).to_bytes_be();
+    let mut m = internals::encrypt(pub_key, &c).to_bytes_be();
+    if m.len() < hashed.len() {
+        m = left_pad(&m, hashed.len());
+    }
 
     // Constant time compare message with hashed
-    let ok = m.ct_eq(hashed);
+    let ok = m.ct_eq(&hashed);
 
     if ok.unwrap_u8() != 1 {
+        dbg!(m);
+        dbg!(hashed);
         return Err(Error::Verification);
     }
 
@@ -101,10 +106,9 @@ pub fn hash_message<H: digest::Digest + Clone, R: Rng, P: PublicKey>(
     hasher.input(append);
 
     let iv: u8 = rng.gen();
-    let min = signer_public_key.n() / BigUint::from(2u8);
-    // TODO: Min should be BigUint::one(), not sure why RSA is throwing an error.
+    let zero = BigUint::from(0u8);
     let (digest, iv) = hasher
-        .results_within(iv, &min, signer_public_key.n())
+        .results_within(iv, &zero, signer_public_key.n())
         .map_err(|_| Error::ModulusTooLarge)?;
 
     Ok((digest, iv))
@@ -127,11 +131,24 @@ pub fn hash_message_with_iv<H: digest::Digest + Clone, P: PublicKey>(
     hasher.vec_result()
 }
 
+/// Returns a new vector of the given length, with 0s left padded.
+pub fn left_pad(input: &[u8], size: usize) -> Vec<u8> {
+    let n = if input.len() > size {
+        size
+    } else {
+        input.len()
+    };
+
+    let mut out = vec![0u8; size];
+    out[size - n..].copy_from_slice(input);
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use crate::*;
     use rsa::{PublicKey, RSAPrivateKey, RSAPublicKey};
-    use sha2::Sha512;
+    use sha2::Sha256;
 
     #[test]
     fn example_test() -> Result<(), Error> {
@@ -145,32 +162,35 @@ mod tests {
         let signer_pub_key =
             RSAPublicKey::new(signer_priv_key.n().clone(), signer_priv_key.e().clone()).unwrap();
 
-        // Stage 2: Blind Signing
-        // ----------------------
+        // Do this a bunch so that we get a good sampling of possibe digests.
+        for _ in 0..500 {
+            // Stage 2: Blind Signing
+            // ----------------------
 
-        // Hash the contents of the message, getting the digest
-        let (digest, iv) = hash_message::<Sha512, _, _>(&mut rng, &signer_pub_key, message)?;
+            // Hash the contents of the message, getting the digest
+            let (digest, iv) = hash_message::<Sha256, _, _>(&mut rng, &signer_pub_key, message)?;
 
-        // Get the blinded digest and the unblinder
-        let (blinded_digest, unblinder) = blind(&mut rng, &signer_pub_key, &digest);
+            // Get the blinded digest and the unblinder
+            let (blinded_digest, unblinder) = blind(&mut rng, &signer_pub_key, &digest);
 
-        // Send the blinded-digest to the signer and get their signature
-        let blind_signature = sign(&mut rng, &signer_priv_key, &blinded_digest)?;
+            // Send the blinded-digest to the signer and get their signature
+            let blind_signature = sign(&mut rng, &signer_priv_key, &blinded_digest)?;
 
-        // Assert the the blind signature does not validate against the orignal digest.
-        assert!(verify(&signer_pub_key, &digest, &blind_signature).is_err());
+            // Assert the the blind signature does not validate against the orignal digest.
+            assert!(verify(&signer_pub_key, &digest, &blind_signature).is_err());
 
-        // Unblind the signature
-        let signature = unblind(&signer_pub_key, &blind_signature, &unblinder);
+            // Unblind the signature
+            let signature = unblind(&signer_pub_key, &blind_signature, &unblinder);
 
-        // Stage 3: Verification
-        // ---------------------
+            // Stage 3: Verification
+            // ---------------------
 
-        // Rehash the message using the iv
-        let check_digest = hash_message_with_iv::<Sha512, _>(iv, &signer_pub_key, message);
+            // Rehash the message using the iv
+            let check_digest = hash_message_with_iv::<Sha256, _>(iv, &signer_pub_key, message);
 
-        // Check that the signature matches on the unblinded signature and the rehashed digest.
-        verify(&signer_pub_key, &check_digest, &signature)?;
+            // Check that the signature matches on the unblinded signature and the rehashed digest.
+            verify(&signer_pub_key, &check_digest, &signature)?;
+        }
 
         Ok(())
     }
