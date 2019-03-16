@@ -65,16 +65,15 @@ Protocol Description
 
 A full domain hash (FDH) is constructed as follows:
 
-`FDH(𝑀, 𝐼𝑉) = H(𝑀 ‖ 𝑁 ‖ 𝐼𝑉 + 0) ‖ H(𝑀 ‖ 𝑁 ‖ 𝐼𝑉 + 1) ‖ H(𝑀 ‖ 𝑁 ‖ 𝐼𝑉 + 2) ... = 𝐷`
+`FDH(𝑀, 𝐼𝑉) = H(𝑀 ‖ 𝑁 ‖ 𝐼𝑉 + 0) ‖ H(𝑀 ‖ 𝑁 ‖ 𝐼𝑉 + 1) ‖ H(𝑀 ‖ 𝑁 ‖ 𝐼𝑉 + 2) ...`
 
 Where:
- - `𝐷` is the resulting digest
  - `𝑀` is the message
  - `H` is any hash function
  - `𝑁` is the signing key's public modulus
  - `𝐼𝑉` is a one-byte initialization vector
 
-The message is hashed (along with `𝑁` and `𝐼𝑉 + incrementing suffix`) in rounds until the length of the hash is equal to the length of `𝑁`. The hash is truncated as needed.
+The message is hashed (along with `𝑁` and `𝐼𝑉 + incrementing suffix`) in rounds until the length of the hash is greater than or equal to the length of `𝑁`. The hash is truncated as needed to produce the digest `𝐷`.
 
 Because `𝐷` must be also smaller than `𝑁`, we interate on different `𝐼𝑉`s until we find a `𝐷` that is smaller than `𝑁`. Pseudocode:
 
