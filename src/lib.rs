@@ -102,6 +102,7 @@ pub fn hash_message<H: digest::Digest + Clone, R: Rng, P: PublicKey>(
 
     let iv: u8 = rng.gen();
     let min = signer_public_key.n() / BigUint::from(2u8);
+    // TODO: Min should be BigUint::one(), not sure why RSA is throwing an error.
     let (digest, iv) = hasher
         .results_within(iv, &min, signer_public_key.n())
         .map_err(|_| Error::ModulusTooLarge)?;
