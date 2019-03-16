@@ -7,10 +7,12 @@ cache: cargo
 
 before_cache: |
   RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin -f
+  cargo install cargo-clippy
 
 script:
 - cargo clean
 - cargo build
+- cargo clippy
 - cargo test
 
 after_success: |
