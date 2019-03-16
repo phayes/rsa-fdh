@@ -36,25 +36,25 @@ let signer_pub_key = RSAPublicKey::new(
 // Stage 2: Blind Signing
 // ----------------------
 
-// Hash the contents of the message, getting the digest
+// Hash the contents of the message, getting the digest and the initialization vector
 let (digest, iv) = rsa_fdh::hash_message::<Sha256, _, _>(&mut rng, &signer_pub_key, message)?;
 
-// Get the blinded digest and the unblinder
+// Get the blinded digest and the secret unblinder
 let (blinded_digest, unblinder) = rsa_fdh::blind(&mut rng, &signer_pub_key, &digest);
 
 // Send the blinded-digest to the signer and get their signature
 let blind_signature = rsa_fdh::sign(&mut rng, &signer_priv_key, &blinded_digest)?;
 
-// Unblind the signature
+// Unblind the signature using the secret unblinder
 let signature = rsa_fdh::unblind(&signer_pub_key, &blind_signature, &unblinder);
 
 
 // Stage 3: Verification
 // ---------------------
 
-// Rehash the message using the iv
+// Rehash the message using the initialization vector
 let check_digest = rsa_fdh::hash_message_with_iv::<Sha256, _>(iv, &signer_pub_key, message);
 
-// Check that the signature matches
+// Verify the signature
 rsa_fdh::verify(&signer_pub_key, &check_digest, &signature)?;
 ```
