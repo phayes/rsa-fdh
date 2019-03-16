@@ -95,14 +95,14 @@ A full domain hash (FDH) is constructed as follows:
 `FDH(𝑀, 𝐼𝑉) = H(𝑀 ‖ 𝑁 ‖ 𝐼𝑉 + 0) ‖ H(𝑀 ‖ 𝑁 ‖ 𝐼𝑉 + 1) ‖ H(𝑀 ‖ 𝑁 ‖ 𝐼𝑉 + 2) ...`
 
 Where:
- - `𝑀` is the message
- - `H` is any hash function
- - `𝑁` is the signing key's public modulus
- - `𝐼𝑉` is a one-byte initialization vector
+ - 𝑀 is the message
+ - H is any hash function
+ - 𝑁 is the signing key's public modulus
+ - 𝐼𝑉 is a one-byte initialization vector
 
-The message is hashed (along with `𝑁` and `𝐼𝑉 + incrementing suffix`) in rounds until the length of the hash is greater than or equal to the length of `𝑁`. The hash is truncated as needed to produce the digest `𝐷` with the same length as `𝑁`.
+The message is hashed (along with 𝑁 and 𝐼𝑉 + incrementing suffix) in rounds until the length of the hash is greater than or equal to the length of 𝑁. The hash is truncated as needed to produce the digest 𝐷 with the same length as 𝑁.
 
-`𝐷` must also be smaller than `𝑁`, so we increment `𝐼𝑉`s until we find a `𝐷` that is smaller than `𝑁`. 
+𝐷 must also be smaller than 𝑁, so we increment 𝐼𝑉 until we find a 𝐷 that is smaller than 𝑁. 
 
 Pseudocode:
 ```
@@ -116,7 +116,7 @@ fn generate_digest(message, public_key):
     return digest
 ```
 
-The `while` loop finishes within a minimal number of iterations because `𝑁` generally occurs around `(2^bitlen) / 2`.
+The `while` loop finishes within a minimal number of iterations because 𝑁 generally occurs around `(2^bitlen) / 2`.
 
 Two signature schemes are supported:
 
