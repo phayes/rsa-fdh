@@ -3,6 +3,7 @@ name = "rsa-fdh"
 version = "0.1.0"
 authors = ["phayes <patrick.d.hayes@gmail.com>"]
 edition = "2018"
+keywords = ["crypto", "rsa", "signature", "blind"]
 
 [dependencies]
 rsa = { git = "https://github.com/phayes/RSA", branch = "blind_functions", features=["expose-internals"] }
