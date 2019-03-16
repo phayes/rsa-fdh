@@ -7,10 +7,9 @@ cache: cargo
 
 before_cache: |
   RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin -f
-  cargo install cargo-clippy
+  rustup component add clippy --toolchain stable-x86_64-unknown-linux-gnu
 
 script:
-- cargo clean
 - cargo build
 - cargo clippy
 - cargo test
