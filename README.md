@@ -81,7 +81,7 @@ Because `𝐃` must be also smaller than `𝑁`, we interate on different `𝐼�
 ```
 iv = random_iv()
 digest = fdh(m, iv)
-while digest > modulus_n:
+while digest.as_int() > modulus_n:
   iv++
   digest = fdh(m, iv)
 return (digest, iv)
