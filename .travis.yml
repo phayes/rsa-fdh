@@ -3,15 +3,16 @@ language: rust
 rust:
     - stable
 
-cache:
-    cargo: true
+cache: cargo
+
+before_cache: |
+  RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin -f
 
 script:
-    - cargo test --all
-    - |
-        if [[ "$TRAVIS_RUST_VERSION" == "stable" ]]; then
-        RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install --force cargo-tarpaulin
-        RUST_BACKTRACE=1 cargo tarpaulin --out Xml
-        bash <(curl -s https://codecov.io/bash)
-        echo "Uploaded code coverage"
-        fi
+- cargo clean
+- cargo build
+- cargo test
+
+after_success: |
+  cargo tarpaulin --out Xml
+  bash <(curl -s https://codecov.io/bash)
