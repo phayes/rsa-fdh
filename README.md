@@ -74,7 +74,7 @@ Where:
  - `𝑁` is the signing key's public modulus
  - `𝐼𝑉` is a one-byte initialization vector
 
-The message is hashed (along with `𝑁`, `𝐼𝑉`, and an incrementing suffix) in rounds until the length of the hash is equal to the length of `𝑁`. The hash is truncated as needed.
+The message is hashed (along with `𝑁` and `𝐼𝑉 + incrementing-suffix`) in rounds until the length of the hash is equal to the length of `𝑁`. The hash is truncated as needed.
 
 Because `𝐃` must be also smaller than `𝑁`, we interate on different `𝐼𝑉`s until we find a `𝐃` that is smaller than `𝑁`. Pseudocode:
 
