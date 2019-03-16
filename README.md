@@ -104,7 +104,7 @@ fn generate_digest(message, public_key):
     modulus_n = public_key.n()
     fdh = create_fdh(sha256, public_key.bitlen())
     iv = 0
-    digest = fdh(message, iv)
+    digest = fdh(message, iv).truncate_to(public_key.bitlen())
     while digest.as_int() > modulus_n:
         iv++
         digest = fdh(message, iv)
