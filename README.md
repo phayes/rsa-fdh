@@ -21,6 +21,7 @@ use sha2::Sha256;
 
 // Stage 1: Setup
 // --------------
+
 let mut rng = rand::thread_rng();
 let message = b"NEVER GOING TO GIVE YOU UP";
 
