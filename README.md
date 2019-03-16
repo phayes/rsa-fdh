@@ -19,7 +19,7 @@ This project implements two RSA-FDH signature schemes:
 
 1. When using the blind signature scheme, the signing key should only be used as part of RSA-FDH blind-signing. Key re-use for encryption or as part of other protocols can result in key disclosure. 
 
-2. This project and it's dependencies have not undergone a security audit. The 1.0 version will not be released until it does.
+2. This project and it's dependencies have not undergone a security audit. The 1.0 version will not be released until it does. If you are interested in performing a security audit, please see this ticket: https://github.com/phayes/rsa-fdh/issues/1
 
 Regular signature scheme example
 --------------------------------
