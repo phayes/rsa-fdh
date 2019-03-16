@@ -22,6 +22,7 @@ pub enum Error {
     RSAError(RSAError),
 }
 
+/// Blind sign the given blinded digest.
 pub fn sign<R: Rng>(
     rng: &mut R,
     priv_key: &RSAPrivateKey,
@@ -45,7 +46,7 @@ pub fn sign<R: Rng>(
     Ok(c)
 }
 
-/// Verifies an RSA PKCS#1 v1.5 signature.
+/// Verifies a signature after it has been unblinded.
 pub fn verify<K: PublicKey>(pub_key: &K, hashed: &[u8], sig: &[u8]) -> Result<(), Error> {
     if hashed.len() != pub_key.size() {
         return Err(Error::Verification);
@@ -85,7 +86,7 @@ pub fn unblind(pub_key: impl PublicKey, blinded_sig: &[u8], unblinder: &[u8]) ->
     unblinded.to_bytes_be()
 }
 
-/// Convenience function for hashing
+/// Hash the message using a full-domain-hash, returning both the digest and the initialization vector.
 pub fn hash_message<H: digest::Digest + Clone, R: Rng, P: PublicKey>(
     rng: &mut R,
     signer_public_key: &P,
@@ -94,15 +95,21 @@ pub fn hash_message<H: digest::Digest + Clone, R: Rng, P: PublicKey>(
     let size = signer_public_key.size();
     let mut hasher = FullDomainHash::<H>::new(size).unwrap(); // will never panic.
     hasher.input(message);
+
+    // Append modulus n to the message before hashing
+    let append = signer_public_key.n().to_bytes_be();
+    hasher.input(append);
+
     let iv: u8 = rng.gen();
+    let min = signer_public_key.n() / BigUint::from(2u8);
     let (digest, iv) = hasher
-        .results_under(iv, signer_public_key.n())
+        .results_within(iv, &min, signer_public_key.n())
         .map_err(|_| Error::ModulusTooLarge)?;
 
     Ok((digest, iv))
 }
 
-/// Convenience function for hashing a message with an initilization vector
+/// Hash the message using a full-domain-hash with the provided initialization vector, returning the digest.
 pub fn hash_message_with_iv<H: digest::Digest + Clone, P: PublicKey>(
     iv: u8,
     signer_public_key: &P,
@@ -111,13 +118,17 @@ pub fn hash_message_with_iv<H: digest::Digest + Clone, P: PublicKey>(
     let size = signer_public_key.size();
     let mut hasher = FullDomainHash::<H>::with_iv(size, iv);
     hasher.input(message);
+
+    // Append modulus n to the message before hashing
+    let append = signer_public_key.n().to_bytes_be();
+    hasher.input(append);
+
     hasher.vec_result()
 }
 
 #[cfg(test)]
 mod tests {
     use crate::*;
-    use fdh::{FullDomainHash, Input, VariableOutput};
     use rsa::{PublicKey, RSAPrivateKey, RSAPublicKey};
     use sha2::Sha512;
 
@@ -145,53 +156,20 @@ mod tests {
         // Send the blinded-digest to the signer and get their signature
         let blind_signature = sign(&mut rng, &signer_priv_key, &blinded_digest)?;
 
-        // Check that the blind signature signs the blind digest.
-        verify(&signer_pub_key, &blinded_digest, &blind_signature)?;
-
         // Assert the the blind signature does not validate against the orignal digest.
         assert!(verify(&signer_pub_key, &digest, &blind_signature).is_err());
 
         // Unblind the signature
         let signature = unblind(&signer_pub_key, &blind_signature, &unblinder);
 
-        // Stage 3: Verifiction
-        // --------------------
+        // Stage 3: Verification
+        // ---------------------
 
         // Rehash the message using the iv
         let check_digest = hash_message_with_iv::<Sha512, _>(iv, &signer_pub_key, message);
 
         // Check that the signature matches on the unblinded signature and the rehashed digest.
         verify(&signer_pub_key, &check_digest, &signature)?;
-
-        Ok(())
-    }
-
-    #[test]
-    fn manual_hash_test() -> Result<(), Error> {
-        let mut rng = rand::thread_rng();
-        let priv_key = RSAPrivateKey::new(&mut rng, 256).unwrap();
-
-        // Don't do this in real life, homomorphic transformations of the message will be valid.
-        let mut hasher = FullDomainHash::<Sha512>::new(256 / 8).unwrap();
-        hasher.input(b"ATTACKATDAWN");
-        let iv: u8 = rng.gen();
-        let (digest, iv) = hasher.results_under(iv, priv_key.n()).unwrap();
-
-        let (blinded_digest, unblinder) = blind(&mut rng, &priv_key, &digest);
-
-        let blind_signature = sign(&mut rng, &priv_key, &blinded_digest)?;
-
-        // Check that the blind signature signs the blind digest.
-        verify(&priv_key, &blinded_digest, &blind_signature)?;
-
-        let unblinded_signature = unblind(&priv_key, &blind_signature, &unblinder);
-
-        verify(&priv_key, &digest, &unblinded_signature)?;
-
-        // Reshash the message to verify it
-        let mut hasher = FullDomainHash::<Sha512>::with_iv(256 / 8, iv);
-        hasher.input(b"ATTACKATDAWN");
-        verify(&priv_key, &hasher.vec_result(), &unblinded_signature)?;
 
         Ok(())
     }

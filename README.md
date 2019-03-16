@@ -18,6 +18,7 @@ use rsa_fdh;
 use rsa::{PublicKey, RSAPrivateKey, RSAPublicKey};
 use sha2::Sha256;
 
+
 // Stage 1: Setup
 // --------------
 let mut rng = rand::thread_rng();
@@ -29,6 +30,7 @@ let signer_pub_key = RSAPublicKey::new(
   signer_priv_key.n().clone(), 
   signer_priv_key.e().clone()
 )?;
+
 
 // Stage 2: Blind Signing
 // ----------------------
@@ -45,8 +47,9 @@ let blind_signature = rsa_fdh::sign(&mut rng, &signer_priv_key, &blinded_digest)
 // Unblind the signature
 let signature = rsa_fdh::unblind(&signer_pub_key, &blind_signature, &unblinder);
 
+
 // Stage 3: Verification
-// --------------------
+// ---------------------
 
 // Rehash the message using the iv
 let check_digest = rsa_fdh::hash_message_with_iv::<Sha256, _>(iv, &signer_pub_key, message);
