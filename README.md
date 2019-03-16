@@ -58,3 +58,33 @@ let check_digest = rsa_fdh::hash_message_with_iv::<Sha256, _>(iv, &signer_pub_ke
 // Verify the signature
 rsa_fdh::verify(&signer_pub_key, &check_digest, &signature)?;
 ```
+
+
+Protocol Description
+--------------------
+
+A full domain hash (FDH) is constructed as follows:
+
+`D = FDH(𝑀, IV) = H(𝑀 ‖ 𝑁 ‖ IV) ‖ H(𝑀 ‖ 𝑁 ‖ IV + 1) ‖ H(𝑀 ‖ 𝑁 ‖ IV + 2) ...`
+
+Where:
+ - `D` is the resulting digest
+ - `𝑀` is the message
+ - `H` is any hash function
+ - `𝑁` is the signing key's public modulus
+ - `IV` is a one-byte initialization vector
+
+The message is hashed (along with `𝑁`, `IV`, and an incrementing suffix) in rounds until the length of the hash is equal to the length of `𝑁`. The hash is truncated as needed.
+
+Because `D` must be also smaller than `𝑁`, we interate on different `IV`s until we find a `D` that is smaller than `𝑁`. Pseudocode:
+
+```
+iv = random_iv()
+digest = fdh(m, iv)
+while digest > modulus_n:
+  iv++
+  digest = fdh(m, iv)
+return (digest, iv)
+```
+
+Blinding, unblinding, signing and verification are then all done in the usual way for RSA, using the digest `D` as the message with no additional padding.
