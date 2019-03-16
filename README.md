@@ -2,7 +2,7 @@
 RSA-FDH
 =======
 
-A rutt implementation of an RSA-FDH signature scheme that supports blind signatures.
+Rust implementation of an RSA-FDH signature scheme that supports blind signatures.
 
 RSA-FDH is a is provably secure blind-signing signature scheme that uses RSA and a Full Domain Hash.
 
