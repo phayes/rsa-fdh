@@ -94,12 +94,6 @@ pub fn hash_message<H: digest::Digest + Clone, R: Rng, P: PublicKey>(
     let size = signer_public_key.size();
     let mut hasher = FullDomainHash::<H>::new(size).unwrap(); // will never panic.
     hasher.input(message);
-
-    // Append the hash of the message as anti-homomorphic error correction.
-    let mut append_hasher = H::new();
-    append_hasher.input(message);
-    hasher.input(append_hasher.result());
-
     let iv: u32 = rng.gen();
     let (digest, iv) = hasher
         .results_under(iv, signer_public_key.n())
@@ -117,12 +111,6 @@ pub fn hash_message_with_iv<H: digest::Digest + Clone, P: PublicKey>(
     let size = signer_public_key.size();
     let mut hasher = FullDomainHash::<H>::with_iv(size, iv);
     hasher.input(message);
-
-    // Append the hash of the message as anti-homomorphic error correction.
-    let mut append_hasher = H::new();
-    append_hasher.input(message);
-    hasher.input(append_hasher.result());
-
     hasher.vec_result()
 }
 
@@ -179,7 +167,7 @@ mod tests {
     }
 
     #[test]
-    fn homomorphic_hash_test() -> Result<(), Error> {
+    fn manual_hash_test() -> Result<(), Error> {
         let mut rng = rand::thread_rng();
         let priv_key = RSAPrivateKey::new(&mut rng, 256).unwrap();
 
