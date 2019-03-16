@@ -101,11 +101,10 @@ The message is hashed (along with `𝑁` and `𝐼𝑉 + incrementing suffix`) i
 Pseudocode:
 ```
 fn generate_digest(message, public_key):
-    modulus_n = public_key.n()
     fdh = create_fdh(sha256, public_key.bitlen())
     iv = 0
     digest = fdh(message, iv).truncate_to(public_key.bitlen())
-    while digest.as_int() > modulus_n:
+    while digest.as_int() > public_key.n():
         iv++
         digest = fdh(message, iv)
     return digest
