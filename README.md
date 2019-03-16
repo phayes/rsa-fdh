@@ -6,7 +6,7 @@ Implements an RSA-FDH signature scheme that supports blind signing.
 
 ### Caveats
 
-1. The signatures are homomorphic, so each signing key should only be used as part of RSA-FHD. Key re-use for encryption or as part of other protocols can result in key disclosure. 
+1. The signing key should only be used as part of RSA-FHD. Key re-use for encryption or as part of other protocols can result in key disclosure. 
 
 2. This module and it's dependencies have not undergone a security audit. The 1.0 version will not be released until it does.
 
