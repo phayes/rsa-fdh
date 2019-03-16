@@ -100,15 +100,15 @@ The message is hashed (along with `𝑁` and `𝐼𝑉 + incrementing suffix`) i
 
 Pseudocode:
 ```
-message = "hunter2"
-modulus_n = public_key.n()
-fdh = create_fdh(sha256, modulus_n.bitlen())
-iv = 0
-digest = fdh(message, iv)
-while digest.as_int() > modulus_n:
-  iv++
-  digest = fdh(message, iv)
-return (digest, iv)
+fn generate_digest(message, public_key):
+    modulus_n = public_key.n()
+    fdh = create_fdh(sha256, public_key.bitlen())
+    iv = 0
+    digest = fdh(message, iv)
+    while digest.as_int() > modulus_n:
+        iv++
+        digest = fdh(message, iv)
+    return digest
 ```
 
 In the regular signature scheme, the signer applies the FDH before signing the message. 
