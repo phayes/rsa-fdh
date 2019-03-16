@@ -2,18 +2,24 @@
 RSA-FDH
 =======
 
-Rust implementation of an RSA-FDH signature scheme that supports blind signatures.
-
 RSA-FDH is a is provably secure blind-signing signature scheme that uses RSA and a full domain hash.
+
+This project implements two RSA-FDH signature schemes:
+
+1. A regular signature scheme with Full Domain Hash (FDH) padding.
+
+2. A blind signature scheme that that supports blind-signing to keep the message being signed secret from the signer.
+
+3. TODO: An anonymous signature scheme that keeps the signer anonymous.
 
 ### Caveats
 
-1. The signing key should only be used as part of RSA-FHD. Key re-use for encryption or as part of other protocols can result in key disclosure. 
+1. When using the blind signature scheme, the signing key should only be used as part of RSA-FDH blind-signing. Key re-use for encryption or as part of other protocols can result in key disclosure. 
 
-2. This module and it's dependencies have not undergone a security audit. The 1.0 version will not be released until it does.
+2. This project and it's dependencies have not undergone a security audit. The 1.0 version will not be released until it does.
 
-Example without blind-singing
------------------------------
+Regular signature scheme example
+--------------------------------
 
 ```rust
 use rsa_fdh;
@@ -45,8 +51,8 @@ rsa_fdh::verify::<Sha256, _>(&signer_pub_key, &digest, &signature)?;
 ```
 
 
-Example with blind-singing
----------------------
+Blind signature scheme example
+------------------------------
 
 ```rust
 use rsa_fdh::blind;
