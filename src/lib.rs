@@ -68,8 +68,6 @@ pub fn verify<K: PublicKey>(pub_key: &K, hashed: &[u8], sig: &[u8]) -> Result<()
     let ok = m.ct_eq(&hashed);
 
     if ok.unwrap_u8() != 1 {
-        dbg!(m);
-        dbg!(hashed);
         return Err(Error::Verification);
     }
 
