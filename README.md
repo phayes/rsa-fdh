@@ -115,6 +115,9 @@ fn generate_digest(message, public_key):
         digest = fdh(message, iv)
     return digest
 ```
+
+The `while` loop generally finishes within a very-minimal number of iterations because of how `𝑁` is constructed.
+
 Two signature schemes are supported:
 
 1. In the regular signature scheme, the signer applies the FDH before signing the message. 
