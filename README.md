@@ -12,18 +12,15 @@ RSA-FDH is a is provably secure blind-signing signature scheme that uses RSA and
 
 2. This module and it's dependencies have not undergone a security audit. The 1.0 version will not be released until it does.
 
-Example
--------
+Example without blind-singing
+-----------------------------
 
 ```rust
 use rsa_fdh;
 use rsa::{PublicKey, RSAPrivateKey, RSAPublicKey};
 use sha2::Sha256;
 
-
-// Stage 1: Setup
-// --------------
-
+// Set up rng and message
 let mut rng = rand::thread_rng();
 let message = b"NEVER GOING TO GIVE YOU UP";
 
@@ -34,31 +31,53 @@ let signer_pub_key = RSAPublicKey::new(
   signer_priv_key.e().clone()
 )?;
 
+// Apply a standard digest to the message
+let mut hasher = Sha256::new();
+hasher.input(message);
+let digest = hasher.result();
 
-// Stage 2: Blind Signing
-// ----------------------
-
-// Hash the contents of the message, getting the digest and the initialization vector
-let (digest, iv) = rsa_fdh::hash_message::<Sha256, _, _>(&mut rng, &signer_pub_key, message)?;
-
-// Get the blinded digest and the secret unblinder
-let (blinded_digest, unblinder) = rsa_fdh::blind(&mut rng, &signer_pub_key, &digest);
-
-// Send the blinded-digest to the signer and get their signature
-let blind_signature = rsa_fdh::sign(&mut rng, &signer_priv_key, &blinded_digest)?;
-
-// Unblind the signature using the secret unblinder
-let signature = rsa_fdh::unblind(&signer_pub_key, &blind_signature, &unblinder);
-
-
-// Stage 3: Verification
-// ---------------------
-
-// Rehash the message using the initialization vector
-let check_digest = rsa_fdh::hash_message_with_iv::<Sha256, _>(iv, &signer_pub_key, message);
+// Obtain a signture
+let signature = rsa_fdh::sign::<Sha256, _>(&mut rng, &signer_priv_key, &digest)?;
 
 // Verify the signature
-rsa_fdh::verify(&signer_pub_key, &check_digest, &signature)?;
+rsa_fdh::verify::<Sha256, _>(&signer_pub_key, &digest, &signature)?;
+
+```
+
+
+Example with blind-singing
+---------------------
+
+```rust
+use rsa_fdh::blind;
+use rsa::{PublicKey, RSAPrivateKey, RSAPublicKey};
+use sha2::Sha256;
+
+// Set up rng and message
+let mut rng = rand::thread_rng();
+let message = b"NEVER GOING TO GIVE YOU UP";
+
+// Create the keys
+let signer_priv_key = RSAPrivateKey::new(&mut rng, 256)?;
+let signer_pub_key = RSAPublicKey::new(
+  signer_priv_key.n().clone(), 
+  signer_priv_key.e().clone()
+)?;
+
+// Hash the contents of the message with a Full Domain Hash, getting the digest
+let digest = blind::hash_message::<Sha256, _>(&signer_pub_key, message)?;
+
+// Get the blinded digest and the unblinder
+let (blinded_digest, unblinder) = blind::blind(&mut rng, &signer_pub_key, &digest);
+
+// Send the blinded-digest to the signer and get their signature
+let blind_signature = blind::sign(&mut rng, &signer_priv_key, &blinded_digest)?;
+
+// Unblind the signature
+let signature = blind::unblind(&signer_pub_key, &blind_signature, &unblinder);
+
+// Verify the signature
+blind::verify(&signer_pub_key, &digest, &signature)?;
 ```
 
 
