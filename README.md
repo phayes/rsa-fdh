@@ -77,7 +77,7 @@ The message is hashed (along with `𝑁` and `𝐼𝑉 + incrementing suffix`) i
 
 Because `𝐷` must be also smaller than `𝑁`, we interate on different `𝐼𝑉`s until we find a `𝐷` that is smaller than `𝑁`. 
 
-### Pseudocode:
+Pseudocode:
 ```
 message = "hunter2"
 modulus_n = public_key.n()
