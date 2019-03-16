@@ -52,9 +52,8 @@ pub fn verify<K: PublicKey>(pub_key: &K, hashed: &[u8], sig: &[u8]) -> Result<()
         return Err(Error::Verification);
     }
 
-    let n = pub_key.n();
     let m = BigUint::from_bytes_be(&hashed);
-    if m >= *n {
+    if m >= *pub_key.n() {
         return Err(Error::Verification);
     }
 
