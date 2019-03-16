@@ -116,7 +116,7 @@ fn generate_digest(message, public_key):
     return digest
 ```
 
-The `while` loop generally finishes within a very-minimal number of iterations because `𝑁` generally occurs around `(2^bitlen) / 2`.
+The `while` loop finishes within a minimal number of iterations because `𝑁` generally occurs around `(2^bitlen) / 2`.
 
 Two signature schemes are supported:
 
