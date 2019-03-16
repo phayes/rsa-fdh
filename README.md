@@ -111,4 +111,8 @@ while digest.as_int() > modulus_n:
 return (digest, iv)
 ```
 
-Blinding, unblinding, signing and verification are then all done in the usual way for RSA, using the digest `𝐷` as the message with no additional padding.
+In the regular signature scheme, the signer applies the FDH before signing the message. 
+
+In the blind-signature scheme, the sender applies the FDH to the message before blinding the resulting digest and sending it to the signer, who signs the blinded digest directly. The signer must not re-use their private keys for encryption outside of the RSA-FDH blind-signature protocol. 
+
+Blinding, unblinding, signing and verification are then all done in the usual way for RSA.
