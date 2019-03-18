@@ -26,8 +26,8 @@ Regular signature scheme example
 
 ```rust
 use rsa_fdh;
-use rsa::{PublicKey, RSAPrivateKey, RSAPublicKey};
-use sha2::Sha256;
+use rsa::{RSAPrivateKey, RSAPublicKey};
+use sha2::{Sha256, Digest};
 
 // Set up rng and message
 let mut rng = rand::thread_rng();
@@ -35,10 +35,7 @@ let message = b"NEVER GOING TO GIVE YOU UP";
 
 // Create the keys
 let signer_priv_key = RSAPrivateKey::new(&mut rng, 256)?;
-let signer_pub_key = RSAPublicKey::new(
-  signer_priv_key.n().clone(), 
-  signer_priv_key.e().clone()
-)?;
+let signer_pub_key: RSAPublicKey = signer_priv_key.clone().into();
 
 // Apply a standard digest to the message
 let mut hasher = Sha256::new();

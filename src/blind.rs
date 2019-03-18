@@ -1,3 +1,39 @@
+//! A blind signature scheme that that supports blind-signing to keep the message being signed secret from the signer.
+//!
+//! The private key **must not** be used in any other way other than blind-signing.
+//! See [the wikipedia article on blind-signing](https://en.wikipedia.org/wiki/Blind_signature#Dangers_of_RSA_blind_signing).
+//!
+//! ### Example
+//! ```
+//! use rsa_fdh::blind;
+//! use rsa::{RSAPrivateKey, RSAPublicKey};
+//! use sha2::{Sha256, Digest};
+//!
+//! // Set up rng and message
+//! let mut rng = rand::thread_rng();
+//! let message = b"NEVER GOING TO GIVE YOU UP";
+//!
+//! // Create the keys
+//! let signer_priv_key = RSAPrivateKey::new(&mut rng, 256).unwrap();
+//! let signer_pub_key: RSAPublicKey = signer_priv_key.clone().into();
+//!
+//! // Hash the contents of the message with a Full Domain Hash, getting the digest
+//! let digest = blind::hash_message::<Sha256, _>(&signer_pub_key, message).unwrap();
+//!
+//! // Get the blinded digest and the secret unblinder
+//! let (blinded_digest, unblinder) = blind::blind(&mut rng, &signer_pub_key, &digest);
+//!
+//! // Send the blinded-digest to the signer and get their signature
+//! let blind_signature = blind::sign(&mut rng, &signer_priv_key, &blinded_digest).unwrap();
+//!
+//! // Unblind the signature
+//! let signature = blind::unblind(&signer_pub_key, &blind_signature, &unblinder);
+//!
+//! // Verify the signature
+//! let ok = blind::verify(&signer_pub_key, &digest, &signature);
+//! assert!(ok.is_ok());
+//! ```
+
 pub use crate::common::sign_hashed as sign;
 pub use crate::common::verify_hashed as verify;
 use num_bigint_dig::BigUint;

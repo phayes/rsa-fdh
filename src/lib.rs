@@ -1,3 +1,38 @@
+//! RSA-FDH is a is provably secure blind-signing signature scheme that uses RSA and a full domain hash.
+//!
+//! This crate implements two RSA-FDH signature schemes:
+//!
+//! 1. A regular signature scheme with Full Domain Hash (FDH) padding.
+//!
+//! 2. A blind signature scheme that that supports blind-signing to keep the message being signed secret from the signer.
+//!
+//! ### Regular signature scheme example
+//!
+//! ```
+//! use rsa::{RSAPrivateKey, RSAPublicKey};
+//! use sha2::{Sha256, Digest};
+//!
+//! // Set up rng and message
+//! let mut rng = rand::thread_rng();;
+//! let message = b"NEVER GOING TO GIVE YOU UP";
+//!
+//! // Create the keys
+//! let signer_priv_key = RSAPrivateKey::new(&mut rng, 256).unwrap();
+//! let signer_pub_key: RSAPublicKey = signer_priv_key.clone().into();
+//!
+//! // Apply a standard digest to the message
+//! let mut hasher = Sha256::new();
+//! hasher.input(message);
+//! let digest = hasher.result();
+//!
+//! // Obtain a signture
+//! let signature = rsa_fdh::sign::<Sha256, _>(&mut rng, &signer_priv_key, &digest).unwrap();
+//!
+//! // Verify the signature
+//! let ok = rsa_fdh::verify::<Sha256, _>(&signer_pub_key, &digest, &signature);
+//! assert!(ok.is_ok());
+//! ```
+
 use rand::Rng;
 use rsa::{PublicKey, RSAPrivateKey};
 
@@ -6,7 +41,11 @@ mod common;
 
 pub use common::Error;
 
-/// Sign the given blinded message.
+/// Sign a message.
+///
+/// Generally the message should be hashed by the requester before being sent to the signer.
+/// The signer will apply RSA-FDH padding before singing the message.
+/// The resulting signature is not a blind signature.
 pub fn sign<H: digest::Digest + Clone, R: Rng>(
     rng: &mut R,
     priv_key: &RSAPrivateKey,
@@ -17,7 +56,9 @@ pub fn sign<H: digest::Digest + Clone, R: Rng>(
     common::sign_hashed(rng, priv_key, &hashed)
 }
 
-/// Verifies a signature.
+/// Verify a signature.
+///
+/// Generally the message should be hashed before verifying the digest against the provided signature.
 pub fn verify<H: digest::Digest + Clone, K: PublicKey>(
     pub_key: &K,
     message: &[u8],
