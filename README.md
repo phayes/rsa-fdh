@@ -104,7 +104,7 @@ Pseudocode:
 fn generate_digest(message, public_key):
     fdh = create_fdh(algo=sha256, length=public_key.bitlen())
     iv = 0
-    digest = fdh(message, iv).truncate_to(public_key.bitlen())
+    digest = fdh(message, iv)
     while digest.as_int() > public_key.n():
         iv++
         digest = fdh(message, iv)
