@@ -13,8 +13,6 @@ This project implements two RSA-FDH signature schemes:
 
 2. A blind signature scheme that that supports blind-signing to keep the message being signed secret from the signer.
 
-3. TODO: An anonymous signature scheme that keeps the signer anonymous.
-
 ### Caveats
 
 1. When using the blind signature scheme, the signing key should only be used as part of RSA-FDH blind-signing. Key re-use for encryption or as part of other protocols can result in key disclosure. 
