@@ -53,9 +53,9 @@ Blind signature scheme example
 ------------------------------
 
 ```rust
-use rsa_fdh::blind;
-use rsa::{PublicKey, RSAPrivateKey, RSAPublicKey};
-use sha2::Sha256;
+use rsa_fdh;
+use rsa::{RSAPrivateKey, RSAPublicKey};
+use sha2::{Sha256, Digest};
 
 // Set up rng and message
 let mut rng = rand::thread_rng();
