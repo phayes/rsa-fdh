@@ -102,7 +102,7 @@ The message is hashed (along with 𝑁 and 𝐼𝑉 + incrementing suffix) in ro
 Pseudocode:
 ```
 fn generate_digest(message, public_key):
-    fdh = create_fdh(sha256, public_key.bitlen())
+    fdh = create_fdh(algo=sha256, length=public_key.bitlen())
     iv = 0
     digest = fdh(message, iv).truncate_to(public_key.bitlen())
     while digest.as_int() > public_key.n():
