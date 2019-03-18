@@ -63,15 +63,12 @@ let message = b"NEVER GOING TO GIVE YOU UP";
 
 // Create the keys
 let signer_priv_key = RSAPrivateKey::new(&mut rng, 256)?;
-let signer_pub_key = RSAPublicKey::new(
-  signer_priv_key.n().clone(), 
-  signer_priv_key.e().clone()
-)?;
+let signer_pub_key: RSAPublicKey = signer_priv_key.clone().into();
 
 // Hash the contents of the message with a Full Domain Hash, getting the digest
 let digest = blind::hash_message::<Sha256, _>(&signer_pub_key, message)?;
 
-// Get the blinded digest and the unblinder
+// Get the blinded digest and the secret unblinder
 let (blinded_digest, unblinder) = blind::blind(&mut rng, &signer_pub_key, &digest);
 
 // Send the blinded-digest to the signer and get their signature
