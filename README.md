@@ -5,7 +5,7 @@ RSA-FDH
 [![Build Status](https://travis-ci.org/phayes/rsa-fdh.svg?branch=master)](https://travis-ci.org/phayes/rsa-fdh)
 [![codecov](https://codecov.io/gh/phayes/rsa-fdh/branch/master/graph/badge.svg)](https://codecov.io/gh/phayes/rsa-fdh)
 
-RSA-FDH is a is provably secure blind-signing signature scheme that uses RSA and a full domain hash.
+RSA-FDH is a is provably secure blind-signing signature scheme that uses RSA and a [full domain hash](https://github.com/phayes/fdh-rs).
 
 This project implements two RSA-FDH signature schemes:
 
