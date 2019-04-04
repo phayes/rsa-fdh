@@ -36,7 +36,7 @@
 
 pub use crate::common::sign_hashed as sign;
 pub use crate::common::verify_hashed as verify;
-use num_bigint_dig::BigUint;
+use num_bigint_dig::BigUint as BigDigUint;
 use rand::Rng;
 use rsa::internals;
 use rsa::PublicKey;
@@ -52,15 +52,15 @@ pub fn hash_message<H: digest::Digest + Clone, P: PublicKey>(
 
 /// Blind the given digest, returning the blinded digest and the unblinding factor.
 pub fn blind<R: Rng, P: PublicKey>(rng: &mut R, pub_key: P, digest: &[u8]) -> (Vec<u8>, Vec<u8>) {
-  let c = BigUint::from_bytes_be(digest);
+  let c = BigDigUint::from_bytes_be(digest);
   let (c, unblinder) = internals::blind::<R, P>(rng, &pub_key, &c);
   (c.to_bytes_be(), unblinder.to_bytes_be())
 }
 
 /// Unblind the given signature, producing a signature that also signs the unblided digest.
 pub fn unblind(pub_key: impl PublicKey, blinded_sig: &[u8], unblinder: &[u8]) -> Vec<u8> {
-  let blinded_sig = BigUint::from_bytes_be(blinded_sig);
-  let unblinder = BigUint::from_bytes_be(unblinder);
+  let blinded_sig = BigDigUint::from_bytes_be(blinded_sig);
+  let unblinder = BigDigUint::from_bytes_be(unblinder);
   let unblinded = internals::unblind(pub_key, &blinded_sig, &unblinder);
   unblinded.to_bytes_be()
 }

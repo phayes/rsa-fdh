@@ -1,6 +1,7 @@
 use failure::Fail;
 use fdh::{FullDomainHash, Input, VariableOutput};
-use num_bigint_dig::BigUint;
+use num_bigint::BigUint;
+use num_bigint_dig::BigUint as BigDigUint;
 use rand::Rng;
 use rsa::errors::Error as RSAError;
 use rsa::internals;
@@ -38,7 +39,11 @@ pub fn hash_message<H: digest::Digest + Clone, P: PublicKey>(
   let iv: u8 = 0;
   let zero = BigUint::from(0u8);
   let (digest, iv) = hasher
-    .results_within(iv, &zero, signer_public_key.n())
+    .results_between(
+      iv,
+      &zero,
+      &BigUint::from_bytes_be(&signer_public_key.n().to_bytes_be()),
+    )
     .map_err(|_| Error::ModulusTooLarge)?;
 
   Ok((digest, iv))
@@ -50,12 +55,14 @@ pub fn verify_hashed<K: PublicKey>(pub_key: &K, hashed: &[u8], sig: &[u8]) -> Re
     return Err(Error::Verification);
   }
 
+  let n = BigUint::from_bytes_be(&pub_key.n().to_bytes_be());
+
   let m = BigUint::from_bytes_be(&hashed);
-  if m >= *pub_key.n() {
+  if m >= n {
     return Err(Error::Verification);
   }
 
-  let c = BigUint::from_bytes_be(sig);
+  let c = BigDigUint::from_bytes_be(sig);
   let mut m = internals::encrypt(pub_key, &c).to_bytes_be();
   if m.len() < hashed.len() {
     m = left_pad(&m, hashed.len());
@@ -82,7 +89,7 @@ pub fn sign_hashed<R: Rng>(
   }
 
   let n = priv_key.n();
-  let m = BigUint::from_bytes_be(&hashed);
+  let m = BigDigUint::from_bytes_be(&hashed);
 
   if m >= *n {
     return Err(Error::DigestTooLarge);
