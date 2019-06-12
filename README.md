@@ -4,6 +4,7 @@
 [![codecov](https://codecov.io/gh/phayes/rsa-fdh/branch/master/graph/badge.svg)](https://codecov.io/gh/phayes/rsa-fdh)
 [![docs](https://docs.rs/fdh/badge.svg)](https://docs.rs/rsa-fdh)
 [![crates.io](https://meritbadge.herokuapp.com/fdh)](https://crates.io/crates/rsa-fdh)
+[![patreon](https://img.shields.io/badge/patreon-donate-green.svg)](https://patreon.com/phayes)
 
 RSA-FDH is a is provably secure blind-signing signature scheme that uses RSA and a [full domain hash](https://github.com/phayes/fdh-rs).
 
@@ -117,3 +118,7 @@ Two signature schemes are supported:
 2. In the blind-signature scheme, the sender applies the FDH to the message before blinding the resulting digest and sending it to the signer, who signs the blinded digest directly. The signer must not re-use their private keys for encryption outside of the RSA-FDH blind-signature protocol.
 
 Blinding, unblinding, signing and verification are done in the usual way for RSA.
+
+ ## Contributors
+ 
+ 1. Patrick Hayes ([linkedin](https://www.linkedin.com/in/patrickdhayes/)) ([github](https://github.com/phayes)) - Available for hire.
