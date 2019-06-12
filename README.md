@@ -5,6 +5,8 @@
 [![docs](https://docs.rs/fdh/badge.svg)](https://docs.rs/rsa-fdh)
 [![crates.io](https://meritbadge.herokuapp.com/fdh)](https://crates.io/crates/rsa-fdh)
 [![patreon](https://img.shields.io/badge/patreon-donate-green.svg)](https://patreon.com/phayes)
+[![flattr](https://img.shields.io/badge/flattr-donate-green.svg)](https://flattr.com/@phayes)
+
 
 RSA-FDH is a is provably secure blind-signing signature scheme that uses RSA and a [full domain hash](https://github.com/phayes/fdh-rs).
 
