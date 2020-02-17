@@ -17,7 +17,7 @@
 //! let message = b"NEVER GOING TO GIVE YOU UP";
 //!
 //! // Create the keys
-//! let signer_priv_key = RSAPrivateKey::new(&mut rng, 256).unwrap();
+//! let signer_priv_key = RSAPrivateKey::new(&mut rng, 2048).unwrap();
 //! let signer_pub_key: RSAPublicKey = signer_priv_key.clone().into();
 //!
 //! // Apply a standard digest to the message
@@ -128,5 +128,4 @@ mod tests {
 
         Ok(())
     }
-
 }
