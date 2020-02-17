@@ -1,6 +1,6 @@
 [package]
 name = "rsa-fdh"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["phayes <patrick.d.hayes@gmail.com>"]
 edition = "2018"
 keywords = ["crypto", "rsa", "signature", "blind"]
