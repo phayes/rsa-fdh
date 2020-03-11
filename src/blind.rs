@@ -24,7 +24,7 @@
 //! let (blinded_digest, unblinder) = blind::blind(&mut rng, &signer_pub_key, &digest);
 //!
 //! // Send the blinded-digest to the signer and get their signature
-//! let blind_signature = blind::sign(&mut rng, &signer_priv_key, &blinded_digest).unwrap();
+//! let blind_signature = blind::sign(Some(&mut rng), &signer_priv_key, &blinded_digest).unwrap();
 //!
 //! // Unblind the signature
 //! let signature = blind::unblind(&signer_pub_key, &blind_signature, &unblinder);
@@ -97,7 +97,7 @@ mod tests {
             let (blinded_digest, unblinder) = blind::blind(&mut rng, &signer_pub_key, &digest);
 
             // Send the blinded-digest to the signer and get their signature
-            let blind_signature = blind::sign(&mut rng, &signer_priv_key, &blinded_digest)?;
+            let blind_signature = blind::sign(Some(&mut rng), &signer_priv_key, &blinded_digest)?;
 
             // Assert the the blind signature does not validate against the orignal digest.
             assert!(blind::verify(&signer_pub_key, &digest, &blind_signature).is_err());
@@ -129,13 +129,13 @@ mod tests {
         let key_1 = RSAPrivateKey::new(&mut rng, 256).unwrap();
         let digest_1 = blind::hash_message::<Sha256, _>(&key_1, message)?;
         let (blinded_digest_1, unblinder_1) = blind::blind(&mut rng, &key_1, &digest_1);
-        let blind_signature_1 = blind::sign(&mut rng, &key_1, &blinded_digest_1)?;
+        let blind_signature_1 = blind::sign(Some(&mut rng), &key_1, &blinded_digest_1)?;
         let signature_1 = blind::unblind(&key_1, &blind_signature_1, &unblinder_1);
 
         let key_2 = RSAPrivateKey::new(&mut rng, 512).unwrap();
         let digest_2 = blind::hash_message::<Sha256, _>(&key_2, message)?;
         let (blinded_digest_2, unblinder_2) = blind::blind(&mut rng, &key_2, &digest_2);
-        let blind_signature_2 = blind::sign(&mut rng, &key_2, &blinded_digest_2)?;
+        let blind_signature_2 = blind::sign(Some(&mut rng), &key_2, &blinded_digest_2)?;
         let signature_2 = blind::unblind(&key_2, &blind_signature_2, &unblinder_2);
 
         // Assert that everything is differnet
@@ -146,7 +146,7 @@ mod tests {
         assert!(signature_1 != signature_2);
 
         // Assert that they don't cross validate
-        assert!(blind::sign(&mut rng, &key_1, &blinded_digest_2).is_err());
+        assert!(blind::sign(Some(&mut rng), &key_1, &blinded_digest_2).is_err());
         assert!(blind::verify(&key_1, &digest_1, &signature_2).is_err());
         assert!(blind::verify(&key_1, &digest_2, &signature_1).is_err());
         assert!(blind::verify(&key_1, &digest_2, &signature_2).is_err());

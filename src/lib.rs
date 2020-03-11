@@ -13,7 +13,7 @@
 //! use sha2::{Sha256, Digest};
 //!
 //! // Set up rng and message
-//! let mut rng = rand::thread_rng();;
+//! let mut rng = rand::thread_rng();
 //! let message = b"NEVER GOING TO GIVE YOU UP";
 //!
 //! // Create the keys
@@ -26,7 +26,7 @@
 //! let digest = hasher.result();
 //!
 //! // Obtain a signture
-//! let signature = rsa_fdh::sign::<Sha256, _>(&mut rng, &signer_priv_key, &digest).unwrap();
+//! let signature = rsa_fdh::sign::<Sha256, _>(Some(&mut rng), &signer_priv_key, &digest).unwrap();
 //!
 //! // Verify the signature
 //! let ok = rsa_fdh::verify::<Sha256, _>(&signer_pub_key, &digest, &signature);
@@ -47,7 +47,7 @@ pub use common::Error;
 /// The signer will apply RSA-FDH padding before singing the message.
 /// The resulting signature is not a blind signature.
 pub fn sign<H: digest::Digest + Clone, R: Rng>(
-    rng: &mut R,
+    rng: Option<&mut R>,
     priv_key: &RSAPrivateKey,
     message: &[u8],
 ) -> Result<Vec<u8>, Error> {
@@ -95,7 +95,7 @@ mod tests {
 
         // Do this a bunch so that we get a good sampling of possibe digests.
         for _ in 0..500 {
-            let signature = rsa_fdh::sign::<Sha256, _>(&mut rng, &signer_priv_key, &digest)?;
+            let signature = rsa_fdh::sign::<Sha256, _>(Some(&mut rng), &signer_priv_key, &digest)?;
             rsa_fdh::verify::<Sha256, _>(&signer_pub_key, &digest, &signature)?;
         }
 
@@ -114,10 +114,10 @@ mod tests {
 
         // Create the keys
         let key_1 = RSAPrivateKey::new(&mut rng, 256).unwrap();
-        let signature_1 = rsa_fdh::sign::<Sha256, _>(&mut rng, &key_1, &digest)?;
+        let signature_1 = rsa_fdh::sign::<Sha256, _>(Some(&mut rng), &key_1, &digest)?;
 
         let key_2 = RSAPrivateKey::new(&mut rng, 512).unwrap();
-        let signature_2 = rsa_fdh::sign::<Sha256, _>(&mut rng, &key_2, &digest)?;
+        let signature_2 = rsa_fdh::sign::<Sha256, _>(Some(&mut rng), &key_2, &digest)?;
 
         // Assert that signatures are different
         assert!(signature_1 != signature_2);

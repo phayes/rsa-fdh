@@ -80,7 +80,7 @@ pub fn verify_hashed<K: PublicKey>(pub_key: &K, hashed: &[u8], sig: &[u8]) -> Re
 
 /// Sign the given blinded digest.
 pub fn sign_hashed<R: Rng>(
-  rng: &mut R,
+  rng: Option<&mut R>,
   priv_key: &RSAPrivateKey,
   hashed: &[u8],
 ) -> Result<Vec<u8>, Error> {
@@ -95,7 +95,7 @@ pub fn sign_hashed<R: Rng>(
     return Err(Error::DigestTooLarge);
   }
 
-  let c = internals::decrypt_and_check(Some(rng), priv_key, &m)
+  let c = internals::decrypt_and_check(rng, priv_key, &m)
     .map_err(Error::RSAError)?
     .to_bytes_be();
 

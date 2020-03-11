@@ -43,7 +43,7 @@ hasher.input(message);
 let digest = hasher.result();
 
 // Obtain a signture
-let signature = rsa_fdh::sign::<Sha256, _>(&mut rng, &signer_priv_key, &digest)?;
+let signature = rsa_fdh::sign::<Sha256, _>(Some(&mut rng), &signer_priv_key, &digest)?;
 
 // Verify the signature
 rsa_fdh::verify::<Sha256, _>(&signer_pub_key, &digest, &signature)?;
@@ -72,7 +72,7 @@ let digest = blind::hash_message::<Sha256, _>(&signer_pub_key, message)?;
 let (blinded_digest, unblinder) = blind::blind(&mut rng, &signer_pub_key, &digest);
 
 // Send the blinded-digest to the signer and get their signature
-let blind_signature = blind::sign(&mut rng, &signer_priv_key, &blinded_digest)?;
+let blind_signature = blind::sign(Some(&mut rng), &signer_priv_key, &blinded_digest)?;
 
 // Unblind the signature
 let signature = blind::unblind(&signer_pub_key, &blind_signature, &unblinder);
@@ -122,5 +122,5 @@ Two signature schemes are supported:
 Blinding, unblinding, signing and verification are done in the usual way for RSA.
 
  ## Contributors
- 
+
  1. Patrick Hayes ([linkedin](https://www.linkedin.com/in/patrickdhayes/)) ([github](https://github.com/phayes)) - Available for hire.
