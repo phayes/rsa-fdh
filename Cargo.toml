@@ -22,7 +22,7 @@ num-bigint = "0.2.6"
 num-bigint-dig = "0.6.0"
 rand = "0.7.3"
 subtle = "2.2.2"
-digest = "0.8.1"
+digest = "0.9.0"
 failure = "0.1.6"
 
 [dev-dependencies]
