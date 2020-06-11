@@ -16,7 +16,7 @@ codecov = { repository = "phayes/rsa-fdh", branch = "master", service = "github"
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-rsa =  {version = "0.2.0", features=["expose-internals"]}
+rsa =  {version = "0.3.0", features=["expose-internals"]}
 fdh = "0.6.0"
 num-bigint = "0.2.6"
 num-bigint-dig = "0.6.0"
