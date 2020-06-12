@@ -17,7 +17,7 @@ maintenance = { status = "actively-developed" }
 
 [dependencies]
 rsa =  {version = "0.2.0", features=["expose-internals"]}
-fdh = "0.6.0"
+fdh = "0.7.0"
 num-bigint = "0.2.6"
 num-bigint-dig = "0.6.0"
 rand = "0.7.3"
