@@ -1,6 +1,6 @@
 [package]
 name = "rsa-fdh"
-version = "0.2.1"
+version = "0.4.0"
 authors = ["phayes <patrick.d.hayes@gmail.com>"]
 edition = "2018"
 keywords = ["crypto", "rsa", "signature", "blind"]
@@ -16,17 +16,18 @@ codecov = { repository = "phayes/rsa-fdh", branch = "master", service = "github"
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-rsa =  {version = "0.2.0", features=["expose-internals"]}
-fdh = "0.6.0"
-num-bigint = "0.2.6"
-num-bigint-dig = "0.6.0"
+rsa = { version = "0.3.0", features = ["expose-internals"] }
+fdh = "0.7.2"
+num-bigint = { version = "0.6", features = [
+    "zeroize"
+], package = "num-bigint-dig" }
 rand = "0.7.3"
-subtle = "2.2.2"
-digest = "0.8.1"
-failure = "0.1.6"
+subtle = "2.2.3"
+digest = "0.9.0"
+failure = "0.1.8"
 
 [dev-dependencies]
-sha2 = "0.8.1"
-sha-1 = "0.8.2"
-hex = "0.4.1"
+sha2 = "0.9.0"
+sha-1 = "0.9.0"
+hex = "0.4.2"
 rand = "0.7.3"

@@ -22,8 +22,8 @@
 //!
 //! // Apply a standard digest to the message
 //! let mut hasher = Sha256::new();
-//! hasher.input(message);
-//! let digest = hasher.result();
+//! hasher.update(message);
+//! let digest = hasher.finalize();
 //!
 //! // Obtain a signture
 //! let signature = rsa_fdh::sign::<Sha256, _>(&mut rng, &signer_priv_key, &digest).unwrap();
@@ -34,7 +34,7 @@
 //! ```
 
 use rand::Rng;
-use rsa::{PublicKey, RSAPrivateKey};
+use rsa::{PublicKey, RSAPrivateKey, RSAPublicKey};
 
 pub mod blind;
 mod common;
@@ -50,8 +50,12 @@ pub fn sign<H: digest::Digest + Clone, R: Rng>(
     rng: &mut R,
     priv_key: &RSAPrivateKey,
     message: &[u8],
-) -> Result<Vec<u8>, Error> {
-    let (hashed, _iv) = common::hash_message::<H, RSAPrivateKey>(priv_key, message)?;
+) -> Result<Vec<u8>, Error>
+where
+    H::OutputSize: Clone,
+{
+    let public_key = priv_key.to_public_key();
+    let (hashed, _iv) = common::hash_message::<H, RSAPublicKey>(&public_key, message)?;
 
     common::sign_hashed(rng, priv_key, &hashed)
 }
@@ -63,7 +67,10 @@ pub fn verify<H: digest::Digest + Clone, K: PublicKey>(
     pub_key: &K,
     message: &[u8],
     sig: &[u8],
-) -> Result<(), Error> {
+) -> Result<(), Error>
+where
+    H::OutputSize: Clone,
+{
     // Apply FDH
     let (hashed, _iv) = common::hash_message::<H, K>(pub_key, message)?;
 
@@ -73,7 +80,7 @@ pub fn verify<H: digest::Digest + Clone, K: PublicKey>(
 #[cfg(test)]
 mod tests {
     use crate as rsa_fdh;
-    use rsa::{PublicKey, RSAPrivateKey, RSAPublicKey};
+    use rsa::RSAPrivateKey;
     use sha2::{Digest, Sha256};
 
     #[test]
@@ -85,13 +92,12 @@ mod tests {
 
         // Hash the message normally
         let mut hasher = Sha256::new();
-        hasher.input(message);
-        let digest = hasher.result();
+        hasher.update(message);
+        let digest = hasher.finalize();
 
         // Create the keys
         let signer_priv_key = RSAPrivateKey::new(&mut rng, 256).unwrap();
-        let signer_pub_key =
-            RSAPublicKey::new(signer_priv_key.n().clone(), signer_priv_key.e().clone()).unwrap();
+        let signer_pub_key = signer_priv_key.to_public_key();
 
         // Do this a bunch so that we get a good sampling of possibe digests.
         for _ in 0..500 {
@@ -109,22 +115,24 @@ mod tests {
 
         // Hash the message normally
         let mut hasher = Sha256::new();
-        hasher.input(message);
-        let digest = hasher.result();
+        hasher.update(message);
+        let digest = hasher.finalize();
 
         // Create the keys
         let key_1 = RSAPrivateKey::new(&mut rng, 256).unwrap();
+        let public_1 = key_1.to_public_key();
         let signature_1 = rsa_fdh::sign::<Sha256, _>(&mut rng, &key_1, &digest)?;
 
         let key_2 = RSAPrivateKey::new(&mut rng, 512).unwrap();
+        let public_2 = key_1.to_public_key();
         let signature_2 = rsa_fdh::sign::<Sha256, _>(&mut rng, &key_2, &digest)?;
 
         // Assert that signatures are different
         assert!(signature_1 != signature_2);
 
         // Assert that they don't cross validate
-        assert!(rsa_fdh::verify::<Sha256, _>(&key_1, &signature_2, &digest).is_err());
-        assert!(rsa_fdh::verify::<Sha256, _>(&key_2, &signature_1, &digest).is_err());
+        assert!(rsa_fdh::verify::<Sha256, _>(&public_1, &signature_2, &digest).is_err());
+        assert!(rsa_fdh::verify::<Sha256, _>(&public_2, &signature_1, &digest).is_err());
 
         Ok(())
     }

@@ -36,31 +36,35 @@
 
 pub use crate::common::sign_hashed as sign;
 pub use crate::common::verify_hashed as verify;
-use num_bigint_dig::BigUint as BigDigUint;
+use fdh::Digest;
+use num_bigint::BigUint;
 use rand::Rng;
 use rsa::internals;
 use rsa::PublicKey;
 
 /// Hash the message as a Full Domain Hash
-pub fn hash_message<H: digest::Digest + Clone, P: PublicKey>(
+pub fn hash_message<H: Digest + Clone, P: PublicKey>(
     signer_public_key: &P,
     message: &[u8],
-) -> Result<Vec<u8>, crate::Error> {
+) -> Result<Vec<u8>, crate::Error>
+where
+    H::OutputSize: Clone,
+{
     let (result, _iv) = crate::common::hash_message::<H, P>(signer_public_key, message)?;
     Ok(result)
 }
 
 /// Blind the given digest, returning the blinded digest and the unblinding factor.
 pub fn blind<R: Rng, P: PublicKey>(rng: &mut R, pub_key: P, digest: &[u8]) -> (Vec<u8>, Vec<u8>) {
-    let c = BigDigUint::from_bytes_be(digest);
+    let c = BigUint::from_bytes_be(digest);
     let (c, unblinder) = internals::blind::<R, P>(rng, &pub_key, &c);
     (c.to_bytes_be(), unblinder.to_bytes_be())
 }
 
 /// Unblind the given signature, producing a signature that also signs the unblided digest.
 pub fn unblind(pub_key: impl PublicKey, blinded_sig: &[u8], unblinder: &[u8]) -> Vec<u8> {
-    let blinded_sig = BigDigUint::from_bytes_be(blinded_sig);
-    let unblinder = BigDigUint::from_bytes_be(unblinder);
+    let blinded_sig = BigUint::from_bytes_be(blinded_sig);
+    let unblinder = BigUint::from_bytes_be(unblinder);
     let unblinded = internals::unblind(pub_key, &blinded_sig, &unblinder);
     unblinded.to_bytes_be()
 }
@@ -69,7 +73,8 @@ pub fn unblind(pub_key: impl PublicKey, blinded_sig: &[u8], unblinder: &[u8]) ->
 mod tests {
     use crate::blind;
     use crate::Error;
-    use rsa::{PublicKey, RSAPrivateKey, RSAPublicKey};
+    use rsa::PublicKeyParts;
+    use rsa::{RSAPrivateKey, RSAPublicKey};
     use sha2::Sha256;
 
     #[test]
@@ -127,16 +132,18 @@ mod tests {
 
         // Create the keys
         let key_1 = RSAPrivateKey::new(&mut rng, 256).unwrap();
-        let digest_1 = blind::hash_message::<Sha256, _>(&key_1, message)?;
-        let (blinded_digest_1, unblinder_1) = blind::blind(&mut rng, &key_1, &digest_1);
+        let public_1 = key_1.to_public_key();
+        let digest_1 = blind::hash_message::<Sha256, _>(&public_1, message)?;
+        let (blinded_digest_1, unblinder_1) = blind::blind(&mut rng, &public_1, &digest_1);
         let blind_signature_1 = blind::sign(&mut rng, &key_1, &blinded_digest_1)?;
-        let signature_1 = blind::unblind(&key_1, &blind_signature_1, &unblinder_1);
+        let signature_1 = blind::unblind(&public_1, &blind_signature_1, &unblinder_1);
 
         let key_2 = RSAPrivateKey::new(&mut rng, 512).unwrap();
-        let digest_2 = blind::hash_message::<Sha256, _>(&key_2, message)?;
-        let (blinded_digest_2, unblinder_2) = blind::blind(&mut rng, &key_2, &digest_2);
+        let public_2 = key_2.to_public_key();
+        let digest_2 = blind::hash_message::<Sha256, _>(&public_2, message)?;
+        let (blinded_digest_2, unblinder_2) = blind::blind(&mut rng, &public_2, &digest_2);
         let blind_signature_2 = blind::sign(&mut rng, &key_2, &blinded_digest_2)?;
-        let signature_2 = blind::unblind(&key_2, &blind_signature_2, &unblinder_2);
+        let signature_2 = blind::unblind(&public_2, &blind_signature_2, &unblinder_2);
 
         // Assert that everything is differnet
         assert!(digest_1 != digest_2);
@@ -147,12 +154,12 @@ mod tests {
 
         // Assert that they don't cross validate
         assert!(blind::sign(&mut rng, &key_1, &blinded_digest_2).is_err());
-        assert!(blind::verify(&key_1, &digest_1, &signature_2).is_err());
-        assert!(blind::verify(&key_1, &digest_2, &signature_1).is_err());
-        assert!(blind::verify(&key_1, &digest_2, &signature_2).is_err());
-        assert!(blind::verify(&key_2, &digest_1, &signature_1).is_err());
-        assert!(blind::verify(&key_2, &digest_1, &signature_2).is_err());
-        assert!(blind::verify(&key_2, &digest_2, &signature_1).is_err());
+        assert!(blind::verify(&public_1, &digest_1, &signature_2).is_err());
+        assert!(blind::verify(&public_1, &digest_2, &signature_1).is_err());
+        assert!(blind::verify(&public_1, &digest_2, &signature_2).is_err());
+        assert!(blind::verify(&public_2, &digest_1, &signature_1).is_err());
+        assert!(blind::verify(&public_2, &digest_1, &signature_2).is_err());
+        assert!(blind::verify(&public_2, &digest_2, &signature_1).is_err());
 
         Ok(())
     }
