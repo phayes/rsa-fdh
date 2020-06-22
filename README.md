@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/phayes/rsa-fdh.svg?branch=master)](https://travis-ci.org/phayes/rsa-fdh)
 [![codecov](https://codecov.io/gh/phayes/rsa-fdh/branch/master/graph/badge.svg)](https://codecov.io/gh/phayes/rsa-fdh)
 [![docs](https://docs.rs/rsa-fdh/badge.svg)](https://docs.rs/rsa-fdh)
-[![crates.io](https://meritbadge.herokuapp.com/fdh)](https://crates.io/crates/rsa-fdh)
+[![crates.io](https://meritbadge.herokuapp.com/rsa-fdh)](https://crates.io/crates/rsa-fdh)
 [![patreon](https://img.shields.io/badge/patreon-donate-green.svg)](https://patreon.com/phayes)
 [![flattr](https://img.shields.io/badge/flattr-donate-green.svg)](https://flattr.com/@phayes)
 
