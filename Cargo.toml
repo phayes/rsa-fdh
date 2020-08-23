@@ -1,6 +1,6 @@
 [package]
 name = "rsa-fdh"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["phayes <patrick.d.hayes@gmail.com>"]
 edition = "2018"
 keywords = ["crypto", "rsa", "signature", "blind"]
@@ -17,7 +17,7 @@ maintenance = { status = "actively-developed" }
 
 [dependencies]
 rsa = { version = "0.3.0", features = ["expose-internals"] }
-fdh = "0.7.2"
+fdh = "0.7.3"
 num-bigint = { version = "0.6", features = [
     "zeroize"
 ], package = "num-bigint-dig" }
@@ -27,7 +27,7 @@ digest = "0.9.0"
 failure = "0.1.8"
 
 [dev-dependencies]
-sha2 = "0.9.0"
-sha-1 = "0.9.0"
+sha2 = "0.9.1"
+sha-1 = "0.9.1"
 hex = "0.4.2"
 rand = "0.7.3"
