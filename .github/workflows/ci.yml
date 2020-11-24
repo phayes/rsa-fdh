@@ -17,11 +17,6 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --no-default-features --features "ring serde"
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --no-default-features --features "pure_rust serde"
 
   rustfmt:
     name: Rustfmt
