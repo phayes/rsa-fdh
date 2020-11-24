@@ -1,5 +1,4 @@
 use digest::{Digest, Update};
-use failure::Fail;
 use fdh::{FullDomainHash, VariableOutput};
 use num_bigint::BigUint;
 use rand::Rng;
@@ -7,19 +6,20 @@ use rsa::errors::Error as RSAError;
 use rsa::internals;
 use rsa::{PublicKey, PublicKeyParts, RSAPrivateKey};
 use subtle::ConstantTimeEq;
+use thiserror::Error;
 
 /// Error types
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum Error {
-    #[fail(display = "rsa-fdh: digest big-endian numeric value is too large")]
+    #[error("rsa-fdh: digest big-endian numeric value is too large")]
     DigestTooLarge,
-    #[fail(display = "rsa-fdh: digest is incorrectly sized")]
+    #[error("rsa-fdh: digest is incorrectly sized")]
     DigestIncorrectSize,
-    #[fail(display = "rsa-fdh: verification failed")]
+    #[error("rsa-fdh: verification failed")]
     Verification,
-    #[fail(display = "rsa-fdh: public key modulus is too large")]
+    #[error("rsa-fdh: public key modulus is too large")]
     ModulusTooLarge,
-    #[fail(display = "rsa-fdh: rsa error: {}", 0)]
+    #[error("rsa-fdh: rsa error: {}", 0)]
     RSAError(RSAError),
 }
 
