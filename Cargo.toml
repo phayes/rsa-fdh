@@ -1,6 +1,6 @@
 [package]
 name = "rsa-fdh"
-version = "0.4.1"
+version = "0.5.0"
 authors = ["phayes <patrick.d.hayes@gmail.com>"]
 edition = "2018"
 keywords = ["crypto", "rsa", "signature", "blind"]
@@ -9,11 +9,6 @@ description = "RSA-FDH is a is provably secure blind-signing signature scheme th
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/phayes/rsa-fdh"
 readme = "README.md"
-
-[badges]
-travis-ci = { repository = "phayes/rsa-fdh", branch = "master" }
-codecov = { repository = "phayes/rsa-fdh", branch = "master", service = "github" }
-maintenance = { status = "actively-developed" }
 
 [dependencies]
 rsa = { version = "0.3.0", features = ["expose-internals"] }
