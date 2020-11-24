@@ -1,6 +1,6 @@
 ## RSA-FDH
 
-[![Build Status](https://travis-ci.org/phayes/rsa-fdh.svg?branch=master)](https://travis-ci.org/phayes/rsa-fdh)
+[![checks](https://github.com/phayes/rsa-fdh/workflows/checks/badge.svg)](https://github.com/phayes/rsa-fdh/actions)
 [![codecov](https://codecov.io/gh/phayes/rsa-fdh/branch/master/graph/badge.svg)](https://codecov.io/gh/phayes/rsa-fdh)
 [![docs](https://docs.rs/rsa-fdh/badge.svg)](https://docs.rs/rsa-fdh)
 [![crates.io](https://meritbadge.herokuapp.com/rsa-fdh)](https://crates.io/crates/rsa-fdh)
