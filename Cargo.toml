@@ -17,7 +17,7 @@ maintenance = { status = "actively-developed" }
 
 [dependencies]
 rsa = { version = "0.3.0", features = ["expose-internals"] }
-fdh = "0.7.3"
+fdh = "0.8.0"
 num-bigint = { version = "0.6", features = [
     "zeroize"
 ], package = "num-bigint-dig" }
